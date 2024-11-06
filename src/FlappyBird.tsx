@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useReducer } from 'react';
+import React, { useEffect, useRef, useReducer, useState } from 'react';
 import axios from 'axios';
 
 const SERVER_URL = 'http://localhost:5000/api';
@@ -62,6 +62,7 @@ const reducer = (state: GameState, action: Action): GameState => {
 const FlappyBird: React.FC<{ userId: string }> = ({ userId }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [{ score, birdY, velocity, pipes, isGameRunning, highScores }, dispatch] = useReducer(reducer, initialState);
+    const [isPaused, setIsPaused] = useState(false);
     const gap = 100;
     const birdX = 10;
     const pipeWidth = 52;
@@ -83,13 +84,14 @@ const FlappyBird: React.FC<{ userId: string }> = ({ userId }) => {
     }, []);
 
     const handleKeyDown = () => {
-        if (isGameRunning) {
+        if (isGameRunning && !isPaused) {
             dispatch({ type: 'SET_VELOCITY', payload: jump });
         }
     };
 
     const resetGame = () => {
         dispatch({ type: 'RESET_GAME' });
+        setIsPaused(false);
     };
 
     const drawFrame = () => {
@@ -105,9 +107,9 @@ const FlappyBird: React.FC<{ userId: string }> = ({ userId }) => {
                 ctx.drawImage(images.pipeUp, pipe.x, pipeUpY);
                 ctx.drawImage(images.pipeBottom, pipe.x, pipeBottomY);
 
-                if (isGameRunning) pipe.x -= 2;
+                if (isGameRunning && !isPaused) pipe.x -= 2;
 
-                if (pipe.x + pipeWidth <= 0 && isGameRunning) {
+                if (pipe.x + pipeWidth <= 0 && isGameRunning && !isPaused) {
                     pipes.splice(index, 1);
                     dispatch({ type: 'SET_SCORE', payload: score + 1 });
                     dispatch({
@@ -135,12 +137,21 @@ const FlappyBird: React.FC<{ userId: string }> = ({ userId }) => {
             ctx.fillStyle = "#000";
             ctx.font = "24px Arial";
             ctx.fillText("Счет: " + score, 10, canvasHeight - 20);
+
+            if (isPaused) {
+                ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                ctx.fillStyle = "#fff";
+                ctx.font = "30px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText("Пауза", canvasWidth / 2, canvasHeight / 2);
+            }
         }
     };
 
     useEffect(() => {
         const interval = setInterval(() => {
-            if (isGameRunning) {
+            if (isGameRunning && !isPaused) {
                 dispatch({ type: 'SET_VELOCITY', payload: velocity + gravity });
                 dispatch({ type: 'SET_BIRD_Y', payload: birdY + velocity });
             }
@@ -148,12 +159,20 @@ const FlappyBird: React.FC<{ userId: string }> = ({ userId }) => {
         }, 20);
 
         return () => clearInterval(interval);
-    }, [birdY, pipes, score, isGameRunning, velocity]);
+    }, [birdY, pipes, score, isGameRunning, velocity, isPaused]);
 
     useEffect(() => {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [isGameRunning]);
+    }, [isGameRunning, isPaused]);
+
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            setIsPaused(document.hidden);
+        };
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    }, []);
 
     const saveScore = async (score: number) => {
         try {
@@ -174,6 +193,11 @@ const FlappyBird: React.FC<{ userId: string }> = ({ userId }) => {
                         <button onClick={resetGame}>Начать заново</button>
                         <button onClick={() => alert(`Рекорды игроков:\n${highScores.map((record) => `${record.name}: ${record.record}`).join('\n')}`)}>Показать рекорды</button>
                     </>
+                )}
+                {isGameRunning && (
+                    <button onClick={() => setIsPaused(!isPaused)}>
+                        {isPaused ? 'Продолжить' : 'Пауза'}
+                    </button>
                 )}
                 <p>Счет: {score}</p>
             </div>
