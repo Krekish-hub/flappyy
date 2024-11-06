@@ -74,11 +74,11 @@ const FlappyBird: React.FC<{ userId: string }> = ({ userId }) => {
 
     useEffect(() => {
         const loadImages = async () => {
-            images.bird.src = await axios.get('/images/flappy_bird_bird.png', { responseType: 'blob' }).then((res) => URL.createObjectURL(res.data));
-            images.bg.src = await axios.get('/images/bg.png', { responseType: 'blob' }).then((res) => URL.createObjectURL(res.data));
-            images.fg.src = await axios.get('/images/fg.png', { responseType: 'blob' }).then((res) => URL.createObjectURL(res.data));
-            images.pipeUp.src = await axios.get('/images/pipeUp.png', { responseType: 'blob' }).then((res) => URL.createObjectURL(res.data));
-            images.pipeBottom.src = await axios.get('/images/pipeBottom.png', { responseType: 'blob' }).then((res) => URL.createObjectURL(res.data));
+            images.bird.src = await axios.get('./images/flappy_bird_bird.png', { responseType: 'blob' }).then((res) => URL.createObjectURL(res.data));
+            images.bg.src = await axios.get('./images/bg.png', { responseType: 'blob' }).then((res) => URL.createObjectURL(res.data));
+            images.fg.src = await axios.get('./images/fg.png', { responseType: 'blob' }).then((res) => URL.createObjectURL(res.data));
+            images.pipeUp.src = await axios.get('./images/pipeUp.png', { responseType: 'blob' }).then((res) => URL.createObjectURL(res.data));
+            images.pipeBottom.src = await axios.get('./images/pipeBottom.png', { responseType: 'blob' }).then((res) => URL.createObjectURL(res.data));
         };
         loadImages();
     }, []);
